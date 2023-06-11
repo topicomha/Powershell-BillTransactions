@@ -5,7 +5,7 @@ $moduleConfig = Import-PowerShellDataFile -Path (Join-Path -Path $PSScriptRoot -
 
 
 # Define the module functions
-function Get-BankAccountCSV {
+function Compare-TransactionsFromBankAccountCSV {
     [CmdletBinding()]
     param (
         [string]$Path
@@ -55,24 +55,81 @@ function Get-BankAccountCSV {
             $bankTransactions += $bankTransaction
 
             $AsscoiatedPerson = Get-Person -Description $row.Description
+            Write-Verbose "AsscoiatedPerson: $AsscoiatedPerson for Description: $($row.Description)"
             
+            $BillType = Get-BillType -Description $row.Description
+            Write-Verbose "BillType: $BillType for Description: $($row.Description)"
             
-            if ($row.Details -eq "DEBIT") {
-                $BillType = Get-BillType -Description $row.Description
-                $debitTransaction = [DebitTransaction]::new()
-                $debitTransaction.ID = $DebitID++
-                $debitTransaction.OGID = $bankTransaction.ID
-                $debitTransaction.PostingDate = $row."Posting Date"
-                $debitTransaction.Description = $row.Description
-                $debitTransaction.Amount = [Math]::Abs($row.Amount)
-                $debitTransaction.Type = $row.Type
-                $debitTransaction.Balance = $row.Balance
-                $debitTransaction.CheckOrSlipNumber = $row."Check Or Slip #"
-                $debitTransaction.AsscoiatedPerson = $AsscoiatedPerson
-                $debitTransaction.BillType = $BillType
+            if ($AsscoiatedPerson -eq "Rent") {
+                $debitTransaction1 = [DebitTransaction]::new()
+                $debitTransaction1.ID = $DebitID++
+                $debitTransaction1.OGID = $bankTransaction.ID
+                $debitTransaction1.PostingDate = $row."Posting Date"
+                $debitTransaction1.Description = $row.Description + "- Split"
+                $debitTransaction1.Amount = [Math]::Abs($row.Amount) / 2
+                $debitTransaction1.Type = $row.Type
+                $debitTransaction1.Balance = $row.Balance
+                $debitTransaction1.CheckOrSlipNumber = $row."Check Or Slip #"
+                $debitTransaction1.AsscoiatedPerson = "David"
+                $debitTransaction1.BillType = $BillType
 
-                $debitTransactions += $debitTransaction
+                $debitTransactions += $debitTransaction1
+
                 write-verbose "Added Debit Transaction: 
+                    ID: $($debitTransaction1.ID) 
+                    OGID: $($debitTransaction1.OGID) 
+                    Amount: $($debitTransaction1.Amount) 
+                    Balance: $($debitTransaction1.Balance) 
+                    Description: $($debitTransaction1.Description) 
+                    CheckOrSlipNumber: $($debitTransaction1.CheckOrSlipNumber) 
+                    Type: $($debitTransaction1.Type) 
+                    PostingDate: $($debitTransaction1.PostingDate) 
+                    Asscoiated Person: $($debitTransaction1.AsscoiatedPerson)
+                    BillType: $($debitTransaction1.BillType)"
+                
+                $debitTransaction2 = [DebitTransaction]::new()
+                $debitTransaction2.ID = $DebitID++
+                $debitTransaction2.OGID = $bankTransaction.ID
+                $debitTransaction2.PostingDate = $row."Posting Date"
+                $debitTransaction2.Description = $row.Description + "- Split"
+                $debitTransaction2.Amount = [Math]::Abs($row.Amount) / 2
+                $debitTransaction2.Type = $row.Type
+                $debitTransaction2.Balance = $row.Balance
+                $debitTransaction2.CheckOrSlipNumber = $row."Check Or Slip #"
+                $debitTransaction2.AsscoiatedPerson = "Jennifer"
+                $debitTransaction2.BillType = $BillType
+                
+                $debitTransactions += $debitTransaction2
+                
+                write-verbose "Added Debit Transaction: 
+                    ID: $($debitTransaction2.ID) 
+                    OGID: $($debitTransaction2.OGID) 
+                    Amount: $($debitTransaction2.Amount) 
+                    Balance: $($debitTransaction2.Balance) 
+                    Description: $($debitTransaction2.Description) 
+                    CheckOrSlipNumber: $($debitTransaction2.CheckOrSlipNumber) 
+                    Type: $($debitTransaction2.Type) 
+                    PostingDate: $($debitTransaction2.PostingDate) 
+                    Asscoiated Person: $($debitTransaction2.AsscoiatedPerson)
+                    BillType: $($debitTransaction2.BillType)"
+            }
+            else {
+                if ($row.Details -eq "DEBIT") {
+                    $debitTransaction = [DebitTransaction]::new()
+                    $debitTransaction.ID = $DebitID++
+                    $debitTransaction.OGID = $bankTransaction.ID
+                    $debitTransaction.PostingDate = $row."Posting Date"
+                    $debitTransaction.Description = $row.Description
+                    $debitTransaction.Amount = [Math]::Abs($row.Amount)
+                    $debitTransaction.Type = $row.Type
+                    $debitTransaction.Balance = $row.Balance
+                    $debitTransaction.CheckOrSlipNumber = $row."Check Or Slip #"
+                    $debitTransaction.AsscoiatedPerson = $AsscoiatedPerson
+                    $debitTransaction.BillType = $BillType
+
+                    $debitTransactions += $debitTransaction
+                
+                    write-verbose "Added Debit Transaction: 
                     ID: $($debitTransaction.ID) 
                     OGID: $($debitTransaction.OGID) 
                     Amount: $($debitTransaction.Amount) 
@@ -83,22 +140,22 @@ function Get-BankAccountCSV {
                     PostingDate: $($debitTransaction.PostingDate) 
                     Asscoiated Person: $($debitTransaction.AsscoiatedPerson)
                     BillType: $($debitTransaction.BillType)"
-            }
-            else {
+                }
+                else {
                 
-                $creditTransaction = [CreditTransaction]::new()
-                $creditTransaction.ID = $CreditID++
-                $creditTransaction.OGID = $bankTransaction.ID
-                $creditTransaction.PostingDate = $row."Posting Date"
-                $creditTransaction.Description = $row.Description
-                $creditTransaction.Amount = $row.Amount
-                $creditTransaction.Type = $row.Type
-                $creditTransaction.Balance = $row.Balance
-                $creditTransaction.CheckOrSlipNumber = $row."Check Or Slip #"
-                $creditTransaction.AsscoiatedPerson = $AsscoiatedPerson
+                    $creditTransaction = [CreditTransaction]::new()
+                    $creditTransaction.ID = $CreditID++
+                    $creditTransaction.OGID = $bankTransaction.ID
+                    $creditTransaction.PostingDate = $row."Posting Date"
+                    $creditTransaction.Description = $row.Description
+                    $creditTransaction.Amount = $row.Amount
+                    $creditTransaction.Type = $row.Type
+                    $creditTransaction.Balance = $row.Balance
+                    $creditTransaction.CheckOrSlipNumber = $row."Check Or Slip #"
+                    $creditTransaction.AsscoiatedPerson = $AsscoiatedPerson
 
-                $creditTransactions += $creditTransaction
-                write-verbose "Added Credit Transaction: 
+                    $creditTransactions += $creditTransaction
+                    write-verbose "Added Credit Transaction: 
                     ID: $($creditTransaction.ID) 
                     OGID: $($creditTransaction.OGID) 
                     Amount: $($creditTransaction.Amount) 
@@ -108,6 +165,7 @@ function Get-BankAccountCSV {
                     Type: $($creditTransaction.Type) 
                     PostingDate: $($creditTransaction.PostingDate)
                     Asscoiated Person: $($creditTransaction.AsscoiatedPerson)" 
+                }
             }
         }
         
@@ -232,12 +290,11 @@ function Get-Person {
     
     $JensCheckingAccountPattern = "Online Transfer from\s+CHK\s+?...3011|Online Transfer from\s+CHK\s+?...6972"
     if ($Description -match $JensCheckingAccountPattern) {
-        {}
         Write-Verbose "Matched ""$JensCheckingAccountPattern"""
         return "Jennifer"
     }
 
-    $DavidsBillPayPattern = "IRVINE RANC|LANDSCAPE|SO CAL GAS|WASTE MANAGEMENT"
+    $DavidsBillPayPattern = "IRVINE RANC|LANDSCAPE|SO CAL GAS|WASTE MANAGEMENT|MONTHLY SERVICE FEE"
     if ($Description -match $DavidsBillPayPattern) {
         Write-Verbose "Matched ""$DavidsBillPayPattern"""
         return "David"
@@ -313,4 +370,5 @@ function Get-BillType {
     write-verbose "No match found for Description: $Description"
     return "Unknown"
 }
+
 
